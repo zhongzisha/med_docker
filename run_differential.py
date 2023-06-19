@@ -1,3 +1,4 @@
+import gc
 import sys, os, shutil, glob, json
 import argparse
 import pandas as pd
@@ -834,6 +835,7 @@ for ind in np.arange(len(svs_filenames)):
             img_vips.dzsave(save_filename)
             time.sleep(1)
             del img, img_vips
+        gc.collect()
 
 if len(all_data_for_umap3dvis) > 0:
     with open('{}/all_data_for_umap3dvis.txt'.format(save_root), 'w') as fp:

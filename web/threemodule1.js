@@ -3,12 +3,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import {parse} from "three/addons/libs/opentype.module";
+import { MDDLoader } from 'three/addons/loaders/MDDLoader.js';
 
 let selectedObject = null;
 let raycaster = new THREE.Raycaster();
 let pointer = new THREE.Vector2();
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+let clock = new THREE.Clock();
 
 let renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio( window.devicePixelRatio );
@@ -22,7 +25,7 @@ let final_centroids_data = window.opener.final_centroids_data;
 let center_x = window.opener.center_x
 let center_y = window.opener.center_y
 let center_z = window.opener.center_z
-let scale = 5;
+let scale = 10;
 
 var group = new THREE.Object3D();
 for (let ind in umap3d_data) {
@@ -87,8 +90,8 @@ function createSprite(line, imgpath, x, y, z) {
     // texture.magFilter = THREE.NearestFilter;
     var texture = new THREE.TextureLoader().load(imgpath);
     var spriteMaterial = new THREE.SpriteMaterial({
-        opacity: 1,
-        transparent: true,
+        opacity: 0.6,
+        transparent: false,
         sizeAttenuation: true,
         map: texture
     });
@@ -137,11 +140,14 @@ function onPointerClicked( event ) {
             } else {
                 console.log('slide_name is not matched');
             }
-            console.log(slide1_name);
-            console.log(slide2_name);
-            console.log(slide_name);
+            console.log(`slide1 is ${slide1_name}`);
+            console.log(`slide2 is ${slide2_name}`);
+            console.log(`you clicked ${slide_name}`);
             if (viewer != null) {
-                let viewport_coord = viewer.viewport.imageToViewportCoordinates(parseInt(junk[6]), parseInt(junk[7]));
+                let coordx = parseInt(junk[6]);
+                let coordy = parseInt(junk[7]);
+                console.log(coordx, coordy);
+                let viewport_coord = viewer.viewport.imageToViewportCoordinates(coordx, coordy);
                 viewer.viewport.panTo(viewport_coord);
             }
 
@@ -188,6 +194,16 @@ function onWindowResize() {
 
 function animate() {
     requestAnimationFrame( animate );
+
+    if (selected_patch_mesh !== null) {
+        selected_patch_mesh.rotation.x += 0.005;
+        selected_patch_mesh.rotation.y += 0.01;
+
+        const delta = clock.getDelta();
+        if ( selected_patch_mixer ) selected_patch_mixer.update( delta );
+
+    }
+
     controls.update();
     renderer.render( scene, camera );
 }
@@ -225,6 +241,80 @@ function colourNameToHex(colour)
 
     return false;
 }
+
+
+var selected_patch_mesh = null;
+var selected_patch_mixer = null;
+// Called sometime after postMessage is called
+window.addEventListener("message", (event) => {
+    console.log("yes, accept an message from ", event.origin);
+    console.log("event.data is ", event.data);
+
+    let junk = event.data.split(',');
+    let x = scale* (parseFloat(junk[1]) - center_x);
+    let y = scale* (parseFloat(junk[2]) - center_y);
+    let z = scale* (parseFloat(junk[3]) - center_z);
+    console.log(x, y, z);
+
+    if (selected_patch_mesh !== null) {
+        scene.remove(selected_patch_mesh);
+        selected_patch_mixer = null;
+    }
+    // var geometry1 = new THREE.BoxGeometry( 1, 1, 1 );
+    // var texture1 = new THREE.TextureLoader().load(junk[0]);
+    // texture1.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    // var material1 = new THREE.MeshBasicMaterial( { map: texture1 } );
+    // selected_patch_mesh = new THREE.Mesh( geometry1, material1 );
+    // selected_patch_mesh.position.set(x, y, z);
+    // scene.add( selected_patch_mesh );
+
+    // if ( selectedObject ) {
+    //     // selectedObject.material.color.set( '#69f' );
+    //     selectedObject = null;
+    // }
+    // pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    // pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    // raycaster.setFromCamera( pointer, camera );
+    // const intersects = raycaster.intersectObject( group, true );
+    // if ( intersects.length > 0 ) {
+    //     const res = intersects.filter( function ( res ) {
+    //         return res && res.object;
+    //     } )[ 0 ];
+    //     if ( res && res.object ) {
+    //         selectedObject = res.object;
+    //         selectedObject.material.color.set( '#f00' );
+    //     } else {
+    //         console.log('intersected, but no object');
+    //     }
+    // } else {
+    //     console.log('no intersects for the patch');
+    // }
+
+    const loader = new MDDLoader();
+    loader.load( 'cube.mdd', function ( result ) {
+
+        const morphTargets = result.morphTargets;
+        const clip = result.clip;
+        // clip.optimize(); // optional
+
+        const geometry1 = new THREE.BoxGeometry();
+        geometry1.morphAttributes.position = morphTargets; // apply morph targets
+        var texture1 = new THREE.TextureLoader().load(junk[0]);
+        texture1.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        var material1 = new THREE.MeshBasicMaterial( { map: texture1 } );
+        selected_patch_mesh = new THREE.Mesh( geometry1, material1 );
+        selected_patch_mesh.position.set(x, y, z);
+        scene.add( selected_patch_mesh );
+        selected_patch_mixer = new THREE.AnimationMixer( selected_patch_mesh );
+        selected_patch_mixer.clipAction( clip ).play();
+
+    } );
+
+    event.source.postMessage(
+        "hi there yourself!  the secret response " + "is: rheeeeet!",
+        event.origin
+    );
+});
 
 // document.addEventListener( 'pointermove', onPointerMove )
 if (WebGL.isWebGLAvailable()) {

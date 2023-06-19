@@ -455,12 +455,12 @@
     }
 
     function get_results_path() {
-        const ds_type_element = document.getElementById("ds_type")
-        const ds_type = ds_type_element.options[ds_type_element.selectedIndex].value;
         const project_type_element = document.getElementById("project_type")
         const project_type = project_type_element.options[project_type_element.selectedIndex].value;
+        const ds_type_element = document.getElementById("ds_type")
+        const ds_type = ds_type_element.options[ds_type_element.selectedIndex].value;
         const split_num_element = document.getElementById("split_num")
-        const split_num = split_num_element.options[split_num_element.selectedIndex].value;
+        let split_num = split_num_element.options[split_num_element.selectedIndex].value;
         const encoder_type_element = document.getElementById("encoder_type")
         const encoder_type = encoder_type_element.options[encoder_type_element.selectedIndex].value;
         const backbone_type_element = document.getElementById("backbone_type")
@@ -475,12 +475,17 @@
         const cluster_type = cluster_type_element.options[cluster_type_element.selectedIndex].value;
 
         var postfix = "HF";
+        split_num = 1;
+        let epoch_num = 54;
+
         if (ds_type === "PanCancer") {
             postfix = "FP";
+            split_num = 3;
+            epoch_num = 22;
         }
 
 
-        return `data/shared_attention_${encoder_type}${backbone_type}/split${split_num}_e49_h224_p64_density_vis/${cluster_type}/${task_type}_top_64_clustering/feat_${feature_type}_feat/${subset_type}`;
+        return `data/${project_type}/differential_results/shared_attention_${encoder_type}${backbone_type}/split${split_num}_e49_h224_p64_density_vis/${cluster_type}/${task_type}_top_64_clustering/feat_${feature_type}_feat/${subset_type}`;
     }
 </script>
 <!--<div>-->
@@ -528,6 +533,44 @@
         container.innerHTML = table_str;
     }
 
+    function load_projects() {
+        let e = document.getElementById('project_type');
+        let i, L = e.options.length - 1;
+        for (i = L; i >= 0; i--) {
+            e.remove(i);
+        }
+
+        var filename = `data/projects.txt`;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                // Typical action to be performed when the document is ready:
+                let allText = xhttp.responseText;
+                let allTextLines = allText.split(/\r\n|\n/);
+                console.log(allTextLines);
+                // in here you basically manipulate your dom with fetched data or call on functions.
+
+                var option = document.createElement("option");
+                option.text = "Please select one project";
+                option.value = -1;
+                option.disabled = true;
+                e.add(option, 0);
+                for (let i = 0; i < allTextLines.length - 1; i++) {
+                    option = document.createElement("option");
+                    option.text = allTextLines[i];
+                    option.value = allTextLines[i];
+                    e.add(option, i + 1);
+                }
+            } else {
+                console.log(this.status);
+            }
+        };
+        xhttp.open("GET", filename, true);
+        xhttp.send();
+    }
+    load_projects();
+
     function clear_select_options(eid) {
         let e = document.getElementById(eid);
         let i, L = e.options.length - 1;
@@ -535,6 +578,7 @@
             e.remove(i);
         }
     }
+
 
     function add_option_to_select(eid) {
 
@@ -571,6 +615,7 @@
         clear_select_options("slides1");
         slide1_name = "";
         slide2_name = "";
+        results_path = "";
     }
 
     var allTextLines;
@@ -718,6 +763,7 @@
 
     var slide1_name = "";
     var slide2_name = "";
+    var umap3dvis_window = null;
     document.getElementById("slides").addEventListener("change", (event) => {
         show_image();
         show_patches();
@@ -994,11 +1040,17 @@
                     let patch_filenames = [];
                     let xs = [];
                     let ys = [];
+                    let umap3dxs = [];
+                    let umap3dys = [];
+                    let umap3dzs = [];
                     for (let j = 0; j < allTextLines.length - 1; j++) {
                         let junk = allTextLines[j].split(',');
                         xs.push(junk[0]);
                         ys.push(junk[1]);
                         patch_filenames.push(`${results_path}/selected_patches/${slide_name}/${cname}/${junk[2]}`);
+                        umap3dxs.push(junk[4]);
+                        umap3dys.push(junk[5]);
+                        umap3dzs.push(junk[6]);
                     }
                     let frac = parseInt(cluster_fractions_per_case[slide_name][i]) / 64.;
                     document.getElementById(`${category_id}_${i}_group_level_frac`).innerHTML = "";
@@ -1034,6 +1086,14 @@
 
                                 if (event.button === 2) {
                                     console.log("mouse-right clicked")
+                                }
+
+                                if (umap3dvis_window !== null) {
+                                    console.log('umap3dvis windows will be in ', umap3dxs[k], umap3dys[k], umap3dzs[k]);
+                                    umap3dvis_window.postMessage(img1.src+','+umap3dxs[k]+','+umap3dys[k]+','+umap3dzs[k],
+                                    "*");
+                                } else {
+                                    console.log('umap3dvis windows is missing. ', umap3dxs[k], umap3dys[k], umap3dzs[k]);
                                 }
                             });
                             //div1.appendChild(img1)
@@ -1136,7 +1196,7 @@
     var center_x, center_y, center_z;
     function show_umap3dvis() {
         results_path = get_results_path();
-        window.open(`umap3dvis.html`);
+        umap3dvis_window = window.open(`umap3dvis.html?ver=456`);
     }
 
     function load_umap3d_data() {
@@ -1202,6 +1262,10 @@
     }
     load_final_centroids_data();
 
+    // Called sometime after postMessage is called
+    window.addEventListener("message", (event) => {
+        console.log("yes, accept an message from ", event.origin);
+    });
 </script>
 </body>
 </html>

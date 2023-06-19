@@ -1,5 +1,6 @@
-torch
-torchvision
+torch==1.13.1
+torchvision==0.14.1
+torchaudio==0.13.1
 pandas
 umap-learn
 openslide-python
@@ -18,6 +19,8 @@ scikit-survival
 openpyxl
 flask
 opencv-python==4.5.5.64
+transformers
+timm
 
 
 

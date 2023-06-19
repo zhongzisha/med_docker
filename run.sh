@@ -1,6 +1,8 @@
 #!/bin/bash
 
-DATA_ROOT=$(pwd)/data/temp2
+INPUT_DIR=${1}
+PROJ_NAME=${2}
+DATA_ROOT=${INPUT_DIR}/.${PROJ_NAME}
 SVS_ROOT=${DATA_ROOT}/svs
 
 rm -rf ${DATA_ROOT}
@@ -8,9 +10,9 @@ if [ ! -d ${SVS_ROOT} ]; then
   mkdir -p ${SVS_ROOT}
 fi
 
-python3 get_data.py $(pwd)/data/inputs ${DATA_ROOT}
+python3 get_data.py ${INPUT_DIR} ${DATA_ROOT}
 
-python create_patches.py \
+python3 create_patches.py \
   --source ${SVS_ROOT} \
   --save_dir ${DATA_ROOT} \
   --patch_size 256 \
@@ -28,7 +30,7 @@ python3 extract_features.py \
   --slide_ext ${IMAGE_EXT} \
   --model_name "mobilenetv3"
 
-
+IMAGE_EXT=".svs"
 PATCH_MTL_SAVEPREFIX="BRCAOnly2GPUsHF"
 SAVE_ROOT=${DATA_ROOT}/differential_results
 FEATS_DIR=${DATA_ROOT}/feats/pt_files
@@ -49,6 +51,7 @@ else # PanCancerOnly2GPUsHF
   EPOCH_NUM=22
   SPLIT_NUM=3
 fi
+
 CKPT_PATH=snapshot_${EPOCH_NUM}.pt
 
 python3 run_differential.py \
@@ -59,7 +62,7 @@ python3 run_differential.py \
   --save_root ${SAVE_ROOT} \
   --split_num "${SPLIT_NUM}" \
   --backbone "mobilenetv3" \
-  --num_patches 256 \
+  --num_patches 64 \
   --num_channels 3 \
   --norm_type "mean_std" \
   --feats_dir ${FEATS_DIR} \
@@ -77,9 +80,22 @@ python3 run_differential.py \
   --cluster_task_name ${CLUSTER_TASK_NAME} \
   --image_ext ${IMAGE_EXT}
 
+cd $SAVE_ROOT
+bash /app/unzip.sh
+cd /app
+
+if [ -e /app/web/data/${PROJ_NAME} ]; then
+  rm -rf /app/web/data/${PROJ_NAME}
+fi
+ln -sf $DATA_ROOT /app/web/data/${PROJ_NAME}
+
+python3 gen_projects.py
+
 exit;
 
 docker build -t debug:1.0 .
 
-docker run -d -it --name test -v "/Users/zhongz2/data/:/app/data" -p 8080:80 debug:1.0
+docker run -d -it --name test --memory="32g" --memory-swap="64g" -v "/Users/zhongz2/data:/appdata" -p 8080:80 debug:1.0
+docker exec -it test bash /app/run.sh /appdata/inputs test2_project
 
+docker stop test && docker rm test && docker rmi debug:1.0
