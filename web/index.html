@@ -146,12 +146,13 @@
 <!--            <option value="WiemDataCheck_15C_check-ResponseGroupsDebug">WiemDataCheck_15C_Debug</option>-->
 <!--            <option value="WiemDataCheck_15C_check-ResponseGroups">WiemDataCheck_15C</option>-->
 <!--            <option value="WiemDataCheck_18C_check-ResponseGroups">WiemDataCheck_18C</option>-->
-            <option value="WiemDataCheck_HNSCC_check-ResponseGroups-Merged18C">WiemData_HNSCC_merged18C</option>
-            <option value="WiemDataCheck_18C_check-ResponseGroups_cervical">WiemDataCheck_18C_cervical</option>
-            <option value="WiemDataCheck_18C_check-ResponseGroups_SCC">WiemDataCheck_18C_SCC</option>
+<!--            <option value="WiemDataCheck_HNSCC_check-ResponseGroups-Merged18C">WiemData_HNSCC_merged18C</option>-->
+<!--            <option value="WiemDataCheck_18C_check-ResponseGroups_cervical">WiemDataCheck_18C_cervical</option>-->
+<!--            <option value="WiemDataCheck_18C_check-ResponseGroups_SCC">WiemDataCheck_18C_SCC</option>-->
 <!--            <option value="TCGA-PAAD">TCGA-PAAD</option>-->
 <!--            <option value="Mouse">Mouse</option>-->
 <!--            <option value="Sheba">Sheba</option>-->
+            <option value="test2_project">test2_project</option>
         </select>
         <label for="ds_type" style="color:red">Trained On: </label>
         <select name="ds_type" id="ds_type">
@@ -555,6 +556,7 @@
                 option.text = "Please select one project";
                 option.value = -1;
                 option.disabled = true;
+                option.selected = true;
                 e.add(option, 0);
                 for (let i = 0; i < allTextLines.length - 1; i++) {
                     option = document.createElement("option");

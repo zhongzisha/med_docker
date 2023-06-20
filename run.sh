@@ -87,6 +87,7 @@ cd /app
 if [ -e /app/web/data/${PROJ_NAME} ]; then
   rm -rf /app/web/data/${PROJ_NAME}
 fi
+
 ln -sf $DATA_ROOT /app/web/data/${PROJ_NAME}
 
 python3 gen_projects.py
@@ -96,6 +97,7 @@ exit;
 docker build -t debug:1.0 .
 
 docker run -d -it --name test --memory="32g" --memory-swap="64g" -v "/Users/zhongz2/data:/appdata" -p 8080:80 debug:1.0
-docker exec -it test bash /app/run.sh /appdata/inputs test2_project
+
+docker exec -d -it test bash /app/run.sh /appdata/inputs test2_project
 
 docker stop test && docker rm test && docker rmi debug:1.0
