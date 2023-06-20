@@ -152,12 +152,17 @@
 <!--            <option value="TCGA-PAAD">TCGA-PAAD</option>-->
 <!--            <option value="Mouse">Mouse</option>-->
 <!--            <option value="Sheba">Sheba</option>-->
-            <option value="test2_project">test2_project</option>
+            <option value="-1">Please select one project</option>
         </select>
         <label for="ds_type" style="color:red">Trained On: </label>
         <select name="ds_type" id="ds_type">
             <option value="BRCAOnly" selected>BRCAOnly</option>
             <option value="PanCancer">PanCancer</option>
+        </select>
+        <label for="num_patches" style="color:red">NumPatches: </label>
+        <select name="num_patches" id="num_patches">
+            <option value="64" selected>64</option>
+            <option value="128">128</option>
         </select>
         <label for="split_num" style="color:red">Split: </label>
         <select name="split_num" id="split_num">
@@ -460,6 +465,8 @@
         const project_type = project_type_element.options[project_type_element.selectedIndex].value;
         const ds_type_element = document.getElementById("ds_type")
         const ds_type = ds_type_element.options[ds_type_element.selectedIndex].value;
+        const num_patches_element = document.getElementById("num_patches")
+        const num_patches = num_patches_element.options[num_patches_element.selectedIndex].value;
         const split_num_element = document.getElementById("split_num")
         let split_num = split_num_element.options[split_num_element.selectedIndex].value;
         const encoder_type_element = document.getElementById("encoder_type")
@@ -486,7 +493,7 @@
         }
 
 
-        return `data/${project_type}/differential_results/shared_attention_${encoder_type}${backbone_type}/split${split_num}_e49_h224_p64_density_vis/${cluster_type}/${task_type}_top_64_clustering/feat_${feature_type}_feat/${subset_type}`;
+        return `data/${project_type}/differential_results/${ds_type}2GPUs${postfix}/shared_attention_${encoder_type}${backbone_type}/split${split_num}_e49_h224_p${num_patches}_density_vis/${cluster_type}/${task_type}_top_64_clustering/feat_${feature_type}_feat/${subset_type}`;
     }
 </script>
 <!--<div>-->
@@ -533,45 +540,6 @@
         table_str += '</table>';
         container.innerHTML = table_str;
     }
-
-    function load_projects() {
-        let e = document.getElementById('project_type');
-        let i, L = e.options.length - 1;
-        for (i = L; i >= 0; i--) {
-            e.remove(i);
-        }
-
-        var filename = `data/projects.txt`;
-
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            if (this.readyState === 4 && this.status === 200) {
-                // Typical action to be performed when the document is ready:
-                let allText = xhttp.responseText;
-                let allTextLines = allText.split(/\r\n|\n/);
-                console.log(allTextLines);
-                // in here you basically manipulate your dom with fetched data or call on functions.
-
-                var option = document.createElement("option");
-                option.text = "Please select one project";
-                option.value = -1;
-                option.disabled = true;
-                option.selected = true;
-                e.add(option, 0);
-                for (let i = 0; i < allTextLines.length - 1; i++) {
-                    option = document.createElement("option");
-                    option.text = allTextLines[i];
-                    option.value = allTextLines[i];
-                    e.add(option, i + 1);
-                }
-            } else {
-                console.log(this.status);
-            }
-        };
-        xhttp.open("GET", filename, true);
-        xhttp.send();
-    }
-    load_projects();
 
     function clear_select_options(eid) {
         let e = document.getElementById(eid);
@@ -736,6 +704,9 @@
 
     var results_path = "";
     document.getElementById("ds_type").onchange = function () {
+        load_all_data();
+    };
+        document.getElementById("num_patches").onchange = function () {
         load_all_data();
     };
     document.getElementById("split_num").onchange = function () {
@@ -1263,6 +1234,46 @@
         xhttp2.send();
     }
     load_final_centroids_data();
+
+
+    function load_projects() {
+        let e = document.getElementById('project_type');
+        let i, L = e.options.length - 1;
+        for (i = L; i >= 0; i--) {
+            e.remove(i);
+        }
+
+        var filename = `data/projects.txt`;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                // Typical action to be performed when the document is ready:
+                let allText = xhttp.responseText;
+                let allTextLines = allText.split(/\r\n|\n/);
+                console.log(allTextLines);
+                // in here you basically manipulate your dom with fetched data or call on functions.
+
+                var option = document.createElement("option");
+                option.text = "Please select one project";
+                option.value = -1;
+                option.disabled = true;
+                option.selected = true;
+                e.add(option, 0);
+                for (let i = 0; i < allTextLines.length - 1; i++) {
+                    option = document.createElement("option");
+                    option.text = allTextLines[i];
+                    option.value = allTextLines[i];
+                    e.add(option, i + 1);
+                }
+            } else {
+                console.log(this.status);
+            }
+        };
+        xhttp.open("GET", filename, true);
+        xhttp.send();
+    }
+    load_projects();
 
     // Called sometime after postMessage is called
     window.addEventListener("message", (event) => {
