@@ -1,9 +1,8 @@
 .idea
 data/
 *~
-*.pt
 .DS_Store
 ._*
 __pycache__
 notes.txt
-
+buildx_config.txt
