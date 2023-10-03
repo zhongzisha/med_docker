@@ -1,7 +1,11 @@
 
-docker buildx build --platform linux/amd64,linux/arm64 -t 35.222.196.170:5000/debug:3.0 .
+docker buildx build --platform linux/amd64,linux/arm64 -t 34.67.81.69:5000/debug:1.0 .
 
 docker run -d -it --name test --memory="32g" --memory-swap="64g" -v "/Users/zhongz2/data:/appdata" -p 8080:80 debug:1.0
+
+docker run -d -it --name test --memory="4g" --memory-swap="8g" -v "/Volumes/data-1/temp4/differential_results:/app/data" -p 8080:80 debug:1.0
+
+https://docs.docker.com/registry/insecure/
 
 docker exec -d -it test bash /app/run.sh /appdata/inputs test2_project
 
@@ -10,23 +14,23 @@ docker stop test && docker rm test && docker rmi debug:1.0
 
 buildx_config.txt
 ```
-[registry."35.222.196.170:5000"]
+[registry."34.67.81.69:5000"]
   http = true
   insecure = true
 ```
 docker buildx create --use --config buildx_config.txt
-docker buildx build --platform linux/amd64,linux/arm64 -t 35.222.196.170:5000/debug:0.1 . --push
+docker buildx build --platform linux/amd64,linux/arm64 -t 34.67.81.69:5000/debug:1.0 . --push
 
 edit `/etc/docker/daemon.json`
 ```
 {
-        "data-root": "/mnt/disks/data1/docker_root/docker",
-        "insecure-registries":["35.222.196.170:5000"]
+        "data-root": "/mnt/disks/data2/docker_root/docker",
+        "insecure-registries":["34.67.81.69:5000"]
 }
 ```
 
 sudo mkdir -p certs
-openssl req -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key -addext "subjectAltName = IP:35.222.196.170" -x509 -days 365 -out certs/domain.crt
+sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key -addext "subjectAltName = IP:34.67.81.69" -x509 -days 365 -out certs/domain.crt
 sudo docker run -d \
 --restart=always \
 --name registry \
@@ -37,11 +41,15 @@ sudo docker run -d \
 -p 443:443 -p 5000:5000 \
 registry:2
 
+sudo docker run -d \
+--restart=always \
+--name registry \
+-p 5000:5000 \
+registry:2
 
-
-docker image push 35.222.196.170:5000/debug:2.0
-curl -X GET http://35.222.196.170:5000/v2/_catalog
-curl -X GET http://35.222.196.170:5000/v2/debug/tags/list
+docker image push 34.67.81.69:5000/debug:2.0
+curl -X GET http://34.67.81.69:5000/v2/_catalog
+curl -X GET http://34.67.81.69:5000/v2/debug/tags/list
 
 
 On Windows, for local directory mapping, first assign a "File Sharing" in
