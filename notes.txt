@@ -58,3 +58,23 @@ The container will recognize the `/appdata`.
 Ref: https://stackoverflow.com/questions/70877785/docker-error-response-from-daemon-user-declined-directory-sharing
 
 TODO GPU docker
+
+
+docker buildx create --use --config buildx_config.txt
+docker buildx build --platform linux/amd64,linux/arm64 -t 34.67.81.69:5000/debug:1.0 . --push
+docker run -d -it --name debug --memory="4g" --memory-swap="8g" -v "/Volumes/data-1/temp5/differential_results:/app/data" -p 8080:80 34.67.81.69:5000/debug:1.0
+docker cp differential_analysis_v27.html debug:/app/
+
+
+docker run -d -it --name debug --memory="4g" --memory-swap="8g" -v "/Volumes/Jiang_Lab/Zisha/temp5/differential_results:/app/data" -p 8080:80 34.67.81.69:5000/debug:1.0
+
+
+
+
+
+
+
+
+
+
+
