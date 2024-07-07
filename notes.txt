@@ -67,7 +67,7 @@ docker run -d -it --name debug --memory="4g" --memory-swap="8g" -v "/Volumes/dat
 docker cp differential_analysis_v27.html debug:/app/
 
 
-docker run -d -it --name debug --memory="4g" --memory-swap="8g" -v "/Volumes/Jiang_Lab:/app/data/Jiang_Lab" -p 8080:80 -p 8099:8099 35.224.198.163:5000/debug:1.0
+docker run -d -it --name debug --memory="8g" --memory-swap="8g" -v "/Volumes/Jiang_Lab:/app/data/Jiang_Lab" -p 8080:80 -p 8099:8099 35.224.198.163:5000/debug:1.0
 
 when the IP server of registry is changes, should modify the "build_config.txt" file.
 
